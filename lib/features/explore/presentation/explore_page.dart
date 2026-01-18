@@ -18,21 +18,10 @@ class ExplorePage extends ConsumerStatefulWidget {
 class _ExplorePageState extends ConsumerState<ExplorePage> {
   String _selectedCategory = 'সব'; // Default 'All'
 
-  final List<String> _categories = [
-    'সব',
-    'রাজনীতি',
-    'অর্থনীতি',
-    'খেলাধুলা',
-    'প্রযুক্তি',
-    'আন্তর্জাতিক',
-    'বিনোদন',
-    'স্বাস্থ্য',
-    'শিক্ষা',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final newsAsync = ref.watch(categoryNewsProvider(_selectedCategory));
+    final categoriesAsync = ref.watch(availableCategoriesProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -51,42 +40,77 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: _categories.map((category) {
-                  final isSelected = _selectedCategory == category;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(
-                        category,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 15,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.white : Colors.black87,
+            child: categoriesAsync.when(
+              data: (categories) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: categories.map((category) {
+                      final isSelected = _selectedCategory == category;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(
+                            category,
+                            style: GoogleFonts.hindSiliguri(
+                              fontSize: 15,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedCategory = category;
+                            });
+                          },
+                          backgroundColor: Colors.grey.shade100,
+                          selectedColor: Colors.black87,
+                          checkmarkColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          showCheckmark: false, // Cleaner look
                         ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+              loading: () => const SizedBox(
+                height: 48,
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+              error: (e, st) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: ['সব'].map((category) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(
+                          category,
+                          style: GoogleFonts.hindSiliguri(fontSize: 15),
+                        ),
+                        selected: true,
+                        onSelected: null,
+                        backgroundColor: Colors.grey.shade100,
+                        selectedColor: Colors.black87,
                       ),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedCategory = category;
-                        });
-                      },
-                      backgroundColor: Colors.grey.shade100,
-                      selectedColor: Colors.black87,
-                      checkmarkColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        side: BorderSide(color: Colors.grey.shade200),
-                      ),
-                      showCheckmark: false, // Cleaner look
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),

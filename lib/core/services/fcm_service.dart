@@ -16,7 +16,7 @@ class FcmService {
     // 0. Background handler is now in main.dart
 
     // 1. Request Permission
-    NotificationSettings settings = await _messaging.requestPermission(
+    await _messaging.requestPermission(
       alert: true,
       announcement: false,
       badge: true,

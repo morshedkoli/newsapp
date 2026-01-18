@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../data/news_repository.dart';
 import '../domain/news_model.dart';
 import '../../home/presentation/widgets/smart_news_card.dart';
@@ -53,7 +52,7 @@ class NewsSearchDelegate extends SearchDelegate<String> {
         }
 
         if (snapshot.hasError) {
-           return const Center(child: Text('কিছু ভুল হয়েছে'));
+           return const Center(child: Text('কিছু ভুল হয়েছে'));
         }
 
         final newsList = snapshot.data ?? [];
@@ -66,7 +65,7 @@ class NewsSearchDelegate extends SearchDelegate<String> {
                 const Icon(Icons.search_off, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
                 Text(
-                  'কোনো ফলাফল পাওয়া যায়নি',
+                  'কোনো ফলাফল পাওয়া যায়নি',
                    style: GoogleFonts.hindSiliguri(fontSize: 18, color: Colors.grey),
                 ),
               ],
@@ -82,22 +81,8 @@ class NewsSearchDelegate extends SearchDelegate<String> {
               return SmartNewsCard(
                 news: news,
                 onTap: () {
-                  // We can't easily push index-based for search result as it's not in the main list
-                  // Ideally we navigate by ID or open logic. 
-                  // For now, let's assume reader page can take just a single item or we assume
-                  // we push this specific news.
-                  // Since our current Reader uses pageHelper with a full list,
-                  // supporting 'Single News View' might be needed or we pass 
-                  // just this one item in a temporary state.
-                  // BUT, our AppRouter supports /news/:id
-                  if (news.id != null) {
-                     context.push('/news/${news.id}');
-                  } else {
-                     // Fallback mechanism if ID isn't available (should not happen for firestore docs)
-                     ScaffoldMessenger.of(context).showSnackBar(
-                       const SnackBar(content: Text('বিস্তারিত দেখা সম্ভব নয়')),
-                     );
-                  }
+                  // Navigate using news ID (Firestore docs always have IDs)
+                  context.push('/news/${news.id}');
                 },
               );
           },

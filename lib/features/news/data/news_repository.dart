@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/news_model.dart';
@@ -13,6 +14,12 @@ final newsStreamProvider = StreamProvider<List<NewsModel>>((ref) {
 final categoryNewsProvider = StreamProvider.family<List<NewsModel>, String>((ref, category) {
   return ref.watch(newsRepositoryProvider).getNewsByCategory(category);
 });
+
+// Provider for Available Categories (only those with posts)
+final availableCategoriesProvider = FutureProvider<List<String>>((ref) {
+  return ref.watch(newsRepositoryProvider).getAvailableCategories();
+});
+
 
 class NewsRepository {
   final FirebaseFirestore _firestore;
@@ -98,6 +105,38 @@ class NewsRepository {
     }
     return null;
   }
+
+  // Get Available Categories (only those with posts)
+  Future<List<String>> getAvailableCategories() async {
+    try {
+      // Fetch all news documents to extract distinct categories
+      final snapshot = await _firestore
+          .collection('news')
+          .get();
+      
+      final categories = <String>{};
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+          final category = data['category'] as String?;
+          if (category != null && category.isNotEmpty && category != 'সাধারণ') {
+            categories.add(category);
+          }
+        } catch (e) {
+          // Skip invalid documents
+        }
+      }
+      
+      // Sort categories alphabetically and always include 'সব' at the beginning
+      final sortedCategories = categories.toList()..sort();
+      return ['সব', ...sortedCategories];
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+      // Fallback to just "All" if there's an error
+      return ['সব'];
+    }
+  }
+
 
   Future<void> seedDummyData() async {
      final newsCollection = _firestore.collection('news');
