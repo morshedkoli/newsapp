@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'NewsByte BD';
+  static const String appName = 'NewsByte';
   static const String tagline = 'মূল খবর, বাড়তি কথা নয়।';
   
   // Routes

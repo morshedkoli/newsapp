@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -58,32 +59,59 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Lottie.asset(
-          'assets/animations/splash_animation.json',
-          controller: _controller,
-          onLoaded: (composition) {
-            // Adjust duration to match Lottie file exactly
-            _controller.duration = composition.duration;
-            _controller.forward();
-          },
-          width: 200,
-          height: 200,
-          fit: BoxFit.contain,
-          // FrameBuilder ensures no white flash if loading takes a split second
-          frameBuilder: (context, child, composition) {
-            if (composition != null) {
-              return child;
-            } else {
-              return const SizedBox(); // Invisible until loaded
-            }
-          },
-          errorBuilder: (context, error, stackTrace) {
-              // Fallback if Lottie fails
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _navigateNext();
-              });
-              return const SizedBox();
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/animations/splash_animation.json',
+              controller: _controller,
+              onLoaded: (composition) {
+                // Adjust duration to match Lottie file exactly
+                _controller.duration = composition.duration;
+                _controller.forward();
+              },
+              width: 200,
+              height: 200,
+              fit: BoxFit.contain,
+              // FrameBuilder ensures no white flash if loading takes a split second
+              frameBuilder: (context, child, composition) {
+                if (composition != null) {
+                  return child;
+                } else {
+                  return const SizedBox(); // Invisible until loaded
+                }
+              },
+              errorBuilder: (context, error, stackTrace) {
+                  // Fallback if Lottie fails
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _navigateNext();
+                  });
+                  return const SizedBox();
+              },
+            ),
+            const SizedBox(height: 24),
+            // Logo & Name
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  'assets/logo/ic_newspaper.svg', // Icon only
+                  height: 40,
+                  width: 40,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  AppConstants.appName,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple, 
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -19,9 +20,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   final List<Map<String, String>> _tutorialData = [
     {
-      'title': 'স্বাগতম NewsByte BD-তে',
+      'title': 'স্বাগতম ${AppConstants.appName}-তে',
       'desc': 'সংক্ষিপ্ত ও গুরুত্বপূর্ণ খবর এক নজরে।',
-      'icon': 'assets/icon/foreground.png', // App Logo
+      'icon': 'assets/logo/full_logo.svg', // App Logo SVG
       'type': 'logo',
     },
     {
@@ -211,11 +212,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (data['type'] == 'logo')
-            Image.asset(
-              data['icon']!,
-              height: 150,
-              width: 150,
-            )
+            data['icon']!.endsWith('.svg')
+                ? SvgPicture.asset(
+                    data['icon']!,
+                    height: 150, // Keep height mostly consistent, width auto
+                  )
+                : Image.asset(
+                    data['icon']!,
+                    height: 150,
+                    width: 150,
+                  )
           else
             _buildIcon(data['icon']!),
           const SizedBox(height: 40),

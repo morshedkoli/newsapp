@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,7 @@ import '../../../core/services/preferences_service.dart';
 import '../../news/data/news_repository.dart';
 
 import 'widgets/smart_news_card.dart';
+import '../../news/presentation/news_search_delegate.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -64,18 +66,23 @@ class HomePage extends ConsumerWidget {
         centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          AppConstants.appName,
-          style: GoogleFonts.hindSiliguri(
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-            fontSize: 24,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: SvgPicture.asset(
+            'assets/logo/full_logo.svg',
+            height: 40, // Height for the full logo
+            fit: BoxFit.contain,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {},
+            onPressed: () {
+               showSearch(
+                 context: context, 
+                 delegate: NewsSearchDelegate(ref),
+               );
+            },
           ),
         ],
       ),

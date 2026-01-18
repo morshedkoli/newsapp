@@ -60,6 +60,32 @@ class NewsRepository {
     });
   }
 
+  // Search News
+  Future<List<NewsModel>> searchNews(String query) async {
+    if (query.isEmpty) return [];
+
+    try {
+      // Basic prefix search (case-sensitive)
+      // Note: For advanced search, consider Algolia or client-side filtering if dataset is small
+      final snapshot = await _firestore
+          .collection('news')
+          .where('title', isGreaterThanOrEqualTo: query)
+          .where('title', isLessThan: '$query\uf8ff')
+          .limit(10)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        try {
+          return NewsModel.fromFirestore(doc);
+        } catch (e) {
+          return null;
+        }
+      }).whereType<NewsModel>().toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   // Get Single News by ID (Deep Link Support)
   Future<NewsModel?> getNewsById(String newsId) async {
     try {
