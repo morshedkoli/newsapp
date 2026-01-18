@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "125810430014",
+    "project_id": "ainews-f6d83",
+    "storage_bucket": "ainews-f6d83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125810430014:android:3dc6e63113487c1f2fc16f",
+        "android_client_info": {
+          "package_name": "com.newsbytebd.newsbyte_bd"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125810430014-i23j57156uldrnj22tefobvdg2t46m93.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIFFjeDC2x_Sjo5SOmpF36YHRZ7DfQkzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125810430014-i23j57156uldrnj22tefobvdg2t46m93.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,25 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "ainews-f6d83",
+                    "appId": "1:125810430014:web:824a273ad5695d932fc16f",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "ainews-f6d83",
+                    "configurations": {
+                        "android": "1:1092336711455:android:19778395f99a7d98b6222a",
+                        "ios": "1:1092336711455:ios:f940e2139329c5e0b6222a",
+                        "macos": "1:1092336711455:ios:f940e2139329c5e0b6222a",
+                        "web": "1:1092336711455:web:1f226872dd82bdd0b6222a",
+                        "windows": "1:1092336711455:web:eb2b6bca5ece538eb6222a"
+                    }
+                }
+            }
+        }
+    }
+}
