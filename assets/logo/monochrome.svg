@@ -3,9 +3,9 @@
   <rect x="96" y="64" width="320" height="384" rx="24" fill="white" stroke="black" stroke-width="32"/>
   <path d="M416 64H320V160L416 64Z" fill="black"/>
   <rect x="144" y="144" width="160" height="32" rx="8" fill="black"/>
-  <rect x="144" y="208" width="224" height="24" rx="4" fill="#4B5563"/>
-  <rect x="144" y="256" width="224" height="24" rx="4" fill="#4B5563"/>
-  <rect x="144" y="304" width="224" height="24" rx="4" fill="#4B5563"/>
-  <rect x="144" y="352" width="160" height="24" rx="4" fill="#4B5563"/>
+  <rect x="144" y="208" width="224" height="24" rx="4" fill="#6B7280"/>
+  <rect x="144" y="256" width="224" height="24" rx="4" fill="#6B7280"/>
+  <rect x="144" y="304" width="224" height="24" rx="4" fill="#6B7280"/>
+  <rect x="144" y="352" width="160" height="24" rx="4" fill="#6B7280"/>
   <circle cx="368" cy="384" r="24" fill="black"/>
 </svg>

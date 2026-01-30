@@ -66,7 +66,7 @@ class NewsSearchDelegate extends SearchDelegate<String> {
                 const SizedBox(height: 16),
                 Text(
                   'কোনো ফলাফল পাওয়া যায়নি',
-                   style: GoogleFonts.hindSiliguri(fontSize: 18, color: Colors.grey),
+                   style: GoogleFonts.tiroBangla(fontSize: 18, color: Colors.grey),
                 ),
               ],
             ),
@@ -96,7 +96,7 @@ class NewsSearchDelegate extends SearchDelegate<String> {
      return Center(
        child: Text(
          'খবর খুঁজুন',
-         style: GoogleFonts.hindSiliguri(fontSize: 16, color: Colors.grey),
+         style: GoogleFonts.tiroBangla(fontSize: 16, color: Colors.grey),
        ),
      );
   }
@@ -105,5 +105,5 @@ class NewsSearchDelegate extends SearchDelegate<String> {
   String get searchFieldLabel => 'অনুসন্ধান করুন...';
   
   @override
-  TextStyle get searchFieldStyle => GoogleFonts.hindSiliguri(fontSize: 18);
+  TextStyle get searchFieldStyle => GoogleFonts.tiroBangla(fontSize: 18);
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DashboardScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -23,41 +24,53 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return GoogleFonts.hindSiliguri(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              );
-            }
-            return GoogleFonts.hindSiliguri(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade600,
-            );
-          }),
-        ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _goBranch,
-          backgroundColor: Colors.white,
-          indicatorColor: Colors.deepPurple.shade50,
-          elevation: 2,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded, color: Colors.deepPurple),
-              label: 'হোম',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.explore_outlined),
-              selectedIcon: Icon(Icons.explore_rounded, color: Colors.deepPurple),
-              label: 'এক্সপ্লোর',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha((0.05 * 255).round()),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
           ],
+        ),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return GoogleFonts.tiroBangla(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryColor,
+                );
+              }
+              return GoogleFonts.tiroBangla(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              );
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _goBranch,
+            backgroundColor: Colors.white,
+            indicatorColor: AppTheme.primaryLight,
+            elevation: 0,
+            destinations: [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined, color: Colors.grey.shade600),
+                selectedIcon: const Icon(Icons.home_rounded, color: AppTheme.primaryColor),
+                label: 'হোম',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.explore_outlined, color: Colors.grey.shade600),
+                selectedIcon: const Icon(Icons.explore_rounded, color: AppTheme.primaryColor),
+                label: 'এক্সপ্লোর',
+              ),
+            ],
+          ),
         ),
       ),
     );

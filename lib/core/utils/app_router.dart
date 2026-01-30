@@ -8,6 +8,8 @@ import '../../features/news/presentation/news_reader_page.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/splash/presentation/welcome_screen.dart';
 
+import '../../features/news/presentation/category_news_page.dart';
+
 // Placeholder files will be created in the next steps, 
 // using simple widgets for now to ensure compilation if I run it early.
 // But mostly I will create the actual pages right after this.
@@ -61,6 +63,24 @@ final goRouter = GoRouter(
         final indexStr = state.uri.queryParameters['index'];
         final index = indexStr != null ? int.tryParse(indexStr) ?? 0 : 0;
         return NewsReaderPage(initialIndex: index);
+      },
+    ),
+
+    // Category News Route
+    GoRoute(
+      path: '/category/:categoryId',
+      builder: (context, state) {
+        final categoryId = state.pathParameters['categoryId'] ?? '';
+        // Decode URI component just in case, though GoRouter handles it well usually
+        // IDs shouldn't need decoding usually but safe to keep if mixed
+        
+        // Extract Title from Query Param (e.g. ?title=রাজনীতি)
+        final title = state.uri.queryParameters['title'];
+         
+        return CategoryNewsPage(
+          categoryId: categoryId,
+          categoryTitle: title, // Pass optional title
+        );
       },
     ),
     

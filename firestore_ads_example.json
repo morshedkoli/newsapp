@@ -1,0 +1,30 @@
+[
+  {
+    "id": "config",
+    "globalEnabled": true,
+    "banner": {
+      "enabled": true,
+      "provider": "custom",
+      "unitId": "ca-app-pub-3940256099942544/6300978111",
+      "customImageUrl": "https://placehold.co/600x100/FF5722/white?text=Special+Offer!",
+      "customLinkUrl": "https://newsbyte.bd",
+      "frequency": 0
+    },
+    "native": {
+      "enabled": true,
+      "provider": "admob", 
+      "unitId": "ca-app-pub-3940256099942544/2247696110",
+      "customImageUrl": "",
+      "customLinkUrl": "",
+      "frequency": 5
+    },
+    "interstitial": {
+      "enabled": true,
+      "provider": "custom",
+      "unitId": "ca-app-pub-3940256099942544/1033173712",
+      "customImageUrl": "https://placehold.co/1080x1920/2196F3/white?text=Full+Screen+Ad",
+      "customLinkUrl": "https://google.com",
+      "frequency": 3
+    }
+  }
+]

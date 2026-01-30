@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../core/constants/app_constants.dart';
+import 'package:newsbyte_bd/core/constants/app_constants.dart';
+import 'package:newsbyte_bd/core/theme/app_theme.dart';
 
 import '../../home/presentation/widgets/smart_news_card.dart';
 import '../../news/data/news_repository.dart';
+import '../../news/presentation/news_search_delegate.dart';
 
 class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
@@ -16,177 +18,240 @@ class ExplorePage extends ConsumerStatefulWidget {
 }
 
 class _ExplorePageState extends ConsumerState<ExplorePage> {
-  String _selectedCategory = 'সব'; // Default 'All'
-
   @override
   Widget build(BuildContext context) {
-    final newsAsync = ref.watch(categoryNewsProvider(_selectedCategory));
-    final categoriesAsync = ref.watch(availableCategoriesProvider);
+    // Watch the new provider which returns List<CategoryModel>
+    final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(
-          'এক্সপ্লোর',
-          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.bold),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/icon/newsbyte_logo.png',
+                height: 40,
+              ),
+              const SizedBox(width: 10),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [Color(0xFF00BFA5), Color(0xFF00897B)], // Hardcoded AppTheme colors
+                ).createShader(bounds),
+                child: Text(
+                   AppConstants.appName,
+                   style: GoogleFonts.tiroBangla(
+                     fontSize: 24,
+                     fontWeight: FontWeight.bold,
+                     color: Colors.white,
+                   ),
+                ),
+              ),
+            ],
+          ),
         ),
-        elevation: 0,
+        centerTitle: false,
         backgroundColor: Colors.white,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Category Selector (Sticky-ish)
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: categoriesAsync.when(
-              data: (categories) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: categories.map((category) {
-                      final isSelected = _selectedCategory == category;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(
-                            category,
-                            style: GoogleFonts.hindSiliguri(
-                              fontSize: 15,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Active Categories Label
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'জনপ্রিয় বিভাগসমূহ', // "Popular Categories"
+                style: GoogleFonts.tiroBangla(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Categories Grid
+            Expanded(
+              child: categoriesAsync.when(
+                data: (categories) {
+                  if (categories.isEmpty) {
+                    return Center(
+                       child: Column(
+                         mainAxisAlignment: MainAxisAlignment.center,
+                         children: [
+                           Icon(Icons.category_outlined, size: 48, color: Colors.grey),
+                           SizedBox(height: 16),
+                           Text('কোনো বিভাগ পাওয়া যায়নি', style: GoogleFonts.tiroBangla(color: Colors.grey)),
+                         ],
+                       ),
+                    );
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, 
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.3, // Slightly taller for badge
+                    ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      // Use name for styling mapping as it's consistent with existing map
+                      final style = _getDynamicStyle(category.name);
+                      
+                      return GestureDetector(
+                        onTap: () {
+                           // ✅ Safe Navigation using ID
+                           // Title is still passed for UI immediate feedback
+                           final safeTitle = Uri.encodeComponent(category.name);
+                           
+                           final route = '/category/${category.id}?title=$safeTitle';
+                           context.push(route);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                            border: Border.all(color: Colors.grey.shade100),
                           ),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedCategory = category;
-                            });
-                          },
-                          backgroundColor: Colors.grey.shade100,
-                          selectedColor: Colors.black87,
-                          checkmarkColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            side: BorderSide(color: Colors.grey.shade200),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: style.color.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        style.icon,
+                                        color: style.color,
+                                        size: 32,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      category.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.tiroBangla(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Post Count Badge (Optional)
+                              if (category.postCount > 0)
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${category.postCount}',
+                                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          showCheckmark: false, // Cleaner look
                         ),
                       );
-                    }).toList(),
-                  ),
-                );
-              },
-              loading: () => const SizedBox(
-                height: 48,
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              ),
-              error: (e, st) => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: ['সব'].map((category) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(
-                          category,
-                          style: GoogleFonts.hindSiliguri(fontSize: 15),
-                        ),
-                        selected: true,
-                        onSelected: null,
-                        backgroundColor: Colors.grey.shade100,
-                        selectedColor: Colors.black87,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-
-          // News List
-          Expanded(
-            child: newsAsync.when(
-              data: (newsList) {
-                if (newsList.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.feed_outlined, size: 60, color: Colors.grey.shade300),
-                        const SizedBox(height: 16),
-                        Text(
-                          'এই বিভাগে এখনো কোনো সংবাদ নেই',
-                          style: GoogleFonts.hindSiliguri(
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        // Seed Button for Dev (Optional, can remove for prod)
-                        TextButton(
-                           onPressed: () => ref.read(newsRepositoryProvider).seedDummyData(),
-                           child: const Text('রিফ্রেশ করুন'),
-                        )
-                      ],
-                    ),
+                    },
                   );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: newsList.length,
-                  itemBuilder: (context, index) {
-                    final news = newsList[index];
-                    return SmartNewsCard(
-                      news: news,
-                      onTap: () {
-                         // Note: Passing index 0 avoids crash, but reader pagination won't match.
-                         // For Explore/Saved, we treat it as single-read mostly.
-                        context.push('${AppConstants.newsReaderRoute}?index=0', extra: news);
-                      },
-                    );
-                  },
-                );
-              },
-              loading: () => ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: 5,
-                itemBuilder: (_, index) => _buildSkeletonCard(),
+                },
+                loading: () => _buildShimmerGrid(),
+                error: (e, st) => Center(
+                   child: Text(
+                     'Failed to load categories',
+                     style: TextStyle(color: Colors.red),
+                   )
+                ),
               ),
-              error: (e, st) => Center(child: Text('Error: $e')),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
-  Widget _buildSkeletonCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade200,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          height: 300, 
+  
+  // Loading Skeleton
+  Widget _buildShimmerGrid() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.4,
+        ),
+        itemCount: 6,
+        itemBuilder: (_, __) => Container(
           decoration: BoxDecoration(
-             color: Colors.white,
-             borderRadius: BorderRadius.circular(16)
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
     );
   }
+
+  // Dynamic Style Generator
+  _CategoryStyle _getDynamicStyle(String category) {
+    // Curated list for common ones (Best UX)
+    switch (category) {
+      case 'জাতীয়': return _CategoryStyle(Icons.flag, Colors.green);
+      case 'আন্তর্জাতিক': return _CategoryStyle(Icons.public, Colors.blue);
+      case 'রাজনীতি': return _CategoryStyle(Icons.gavel, Colors.deepOrange);
+      case 'খেলা': return _CategoryStyle(Icons.sports_soccer, Colors.indigo);
+      case 'খেলাধুলা': return _CategoryStyle(Icons.sports_soccer, Colors.indigo); // Variant
+      case 'প্রযুক্তি': return _CategoryStyle(Icons.memory, Colors.purple);
+      case 'অর্থনীতি': return _CategoryStyle(Icons.attach_money, Colors.teal);
+      case 'বিনোদন': return _CategoryStyle(Icons.movie, Colors.pink);
+      case 'স্বাস্থ্য': return _CategoryStyle(Icons.health_and_safety, Colors.redAccent);
+      case 'শিক্ষা': return _CategoryStyle(Icons.school, Colors.amber.shade700);
+      case 'লাইফস্টাইল': return _CategoryStyle(Icons.style, Colors.cyan);
+      case 'মতামত': return _CategoryStyle(Icons.forum, Colors.brown);
+      case 'ধর্ম': return _CategoryStyle(Icons.mosque, Colors.green.shade800);
+    }
+    
+    // Fallback: Generate generic icon/color based on string hash to be consistent
+    final colors = [
+      Colors.blue, Colors.red, Colors.green, Colors.orange, 
+      Colors.purple, Colors.teal, Colors.pink, Colors.indigo
+    ];
+    final color = colors[category.hashCode.abs() % colors.length];
+    
+    return _CategoryStyle(Icons.article, color);
+  }
+}
+
+class _CategoryStyle {
+  final IconData icon;
+  final Color color;
+  _CategoryStyle(this.icon, this.color);
 }

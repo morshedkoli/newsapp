@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/services/preferences_service.dart';
+import 'package:newsbyte_bd/core/constants/app_constants.dart';
+import 'package:newsbyte_bd/core/services/preferences_service.dart';
+import 'package:newsbyte_bd/core/theme/app_theme.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -15,13 +15,19 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Max duration safeguard
+      duration: const Duration(seconds: 2),
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
     );
 
     // Initialize logic
@@ -29,10 +35,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   }
 
   void _initSplash() {
+    _controller.forward();
+    
     // Navigate after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _navigateNext();
+        // Add a small delay for better UX
+        Future.delayed(const Duration(milliseconds: 500), () {
+           _navigateNext();
+        });
       }
     });
   }
@@ -58,60 +69,51 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Lottie.asset(
-              'assets/animations/splash_animation.json',
-              controller: _controller,
-              onLoaded: (composition) {
-                // Adjust duration to match Lottie file exactly
-                _controller.duration = composition.duration;
-                _controller.forward();
-              },
-              width: 200,
-              height: 200,
-              fit: BoxFit.contain,
-              // FrameBuilder ensures no white flash if loading takes a split second
-              frameBuilder: (context, child, composition) {
-                if (composition != null) {
-                  return child;
-                } else {
-                  return const SizedBox(); // Invisible until loaded
-                }
-              },
-              errorBuilder: (context, error, stackTrace) {
-                  // Fallback if Lottie fails
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _navigateNext();
-                  });
-                  return const SizedBox();
-              },
-            ),
-            const SizedBox(height: 24),
-            // Logo & Name
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'assets/logo/ic_newspaper.svg', // Icon only
-                  height: 40,
-                  width: 40,
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  AppConstants.appName,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple, 
-                    letterSpacing: 1.2,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              AppTheme.primaryLight.withAlpha((0.5 * 255).round()),
+            ],
+          ),
+        ),
+        child: Center(
+          child: ScaleTransition(
+            scale: _animation,
+            child: FadeTransition(
+              opacity: _animation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  Image.asset(
+                    'assets/icon/newsbyte_logo.png',
+                    height: 120, // Increased size for splash impact
+                    width: 120,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  // App Name
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                    ).createShader(bounds),
+                    child: const Text(
+                      AppConstants.appName,
+                      style: TextStyle(
+                        fontSize: 36, // Slightly larger
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, 
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

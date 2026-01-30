@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/url_utils.dart'; // Import
+import '../../../../core/widgets/safe_network_image.dart'; // Import
 
 class NewsDetailView extends ConsumerWidget {
   final String newsId;
@@ -24,22 +27,14 @@ class NewsDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // A2 LAYOUT STRUCTURE (CRITICAL)
     return Container(
       color: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            // 1. Header (Fixed Height Image) - optional per design, but sticking to scrollable content helps UX
-            // However, "A2" says: SizedBox(height: HEADER_HEIGHT) ... Expanded(...)
-            // We will put the image/title in the scrollable part as usual for tiktok style, 
-            // BUT ensure NO extra nested wrappers exist.
-            
-            // Actually, to strictly follow A2 "Column with children", we do this:
-            
              Expanded(
                child: SingleChildScrollView(
-                 physics: const ClampingScrollPhysics(), // Android-safe
+                 physics: const ClampingScrollPhysics(),
                  child: Column(
                    crossAxisAlignment: CrossAxisAlignment.start,
                    children: [
@@ -50,26 +45,26 @@ class NewsDetailView extends ConsumerWidget {
                        child: Stack(
                          fit: StackFit.expand,
                          children: [
-                           CachedNetworkImage(
-                             imageUrl: imageUrl,
+                           SafeNetworkImage(
+                             url: imageUrl,
                              fit: BoxFit.cover,
                              placeholder: (context, url) => Shimmer.fromColors(
-                               baseColor: Colors.grey.shade200,
-                               highlightColor: Colors.grey.shade100,
+                               baseColor: AppTheme.primaryLight,
+                               highlightColor: Colors.white,
                                child: Container(color: Colors.white),
                              ),
                              errorWidget: (context, url, error) => Container(
-                               color: Colors.grey.shade100,
-                               child: const Center(child: Icon(Icons.broken_image, 
-                                 color: Colors.grey, size: 50)),
+                               color: AppTheme.primaryLight,
+                               child: Center(child: Icon(Icons.broken_image, 
+                                 color: AppTheme.primaryColor.withAlpha((0.5 * 255).round()), size: 50)),
                              ),
                            ),
-                           // Gradient
+                           // Gradient overlay for text readability
                            Positioned(
                              bottom: 0,
                              left: 0,
                              right: 0,
-                             height: 80,
+                             height: 100,
                              child: Container(
                                decoration: BoxDecoration(
                                  gradient: LinearGradient(
@@ -77,7 +72,8 @@ class NewsDetailView extends ConsumerWidget {
                                    end: Alignment.bottomCenter,
                                    colors: [
                                      Colors.transparent,
-                                     Colors.white.withAlpha(0),
+                                     Colors.white.withAlpha((0.8 * 255).round()),
+                                     Colors.white,
                                    ],
                                  ),
                                ),
@@ -95,7 +91,7 @@ class NewsDetailView extends ConsumerWidget {
                            // Title
                            Text(
                              title,
-                             style: GoogleFonts.hindSiliguri(
+                             style: GoogleFonts.tiroBangla(
                                fontSize: 24,
                                fontWeight: FontWeight.bold,
                                height: 1.3,
@@ -104,12 +100,14 @@ class NewsDetailView extends ConsumerWidget {
                            ),
                            const SizedBox(height: 20),
                            
-                           // Divider
+                           // Gradient Divider
                            Container(
-                             width: 60,
+                             width: 80,
                              height: 4,
                              decoration: BoxDecoration(
-                               color: Colors.deepPurple,
+                               gradient: LinearGradient(
+                                 colors: [AppTheme.primaryColor, AppTheme.accentColor],
+                               ),
                                borderRadius: BorderRadius.circular(2),
                              ),
                            ),
@@ -118,7 +116,7 @@ class NewsDetailView extends ConsumerWidget {
                            // Summary
                            Text(
                              summary,
-                             style: GoogleFonts.hindSiliguri(
+                             style: GoogleFonts.tiroBangla(
                                fontSize: 18,
                                height: 1.7,
                                color: Colors.grey.shade900,
@@ -127,44 +125,61 @@ class NewsDetailView extends ConsumerWidget {
                            ),
                            const SizedBox(height: 32),
                            
-                           // Buttons
+                           // Read More Button with Gradient
                            SizedBox(
                              width: double.infinity,
-                             child: ElevatedButton.icon(
-                               onPressed: onReadMore,
-                               icon: const Icon(Icons.open_in_new, size: 18),
-                               label: const Text('মূল সংবাদ পড়ুন'),
-                               style: ElevatedButton.styleFrom(
-                                 padding: const EdgeInsets.symmetric(vertical: 16),
-                                 backgroundColor: Colors.black,
-                                 foregroundColor: Colors.white,
-                                 elevation: 0,
-                                 shape: RoundedRectangleBorder(
-                                   borderRadius: BorderRadius.circular(12),
+                             child: Container(
+                               decoration: BoxDecoration(
+                                 gradient: LinearGradient(
+                                   colors: [AppTheme.primaryColor, AppTheme.primaryDark],
                                  ),
-                                 textStyle: GoogleFonts.hindSiliguri(
-                                   fontSize: 16,
-                                   fontWeight: FontWeight.w600,
+                                 borderRadius: BorderRadius.circular(14),
+                                 boxShadow: [
+                                   BoxShadow(
+                                     color: AppTheme.primaryColor.withAlpha((0.3 * 255).round()),
+                                     blurRadius: 12,
+                                     offset: const Offset(0, 4),
+                                   ),
+                                 ],
+                               ),
+                               child: ElevatedButton.icon(
+                                 onPressed: onReadMore,
+                                 icon: const Icon(Icons.open_in_new, size: 18),
+                                 label: const Text('মূল সংবাদ পড়ুন'),
+                                 style: ElevatedButton.styleFrom(
+                                   padding: const EdgeInsets.symmetric(vertical: 16),
+                                   backgroundColor: Colors.transparent,
+                                   shadowColor: Colors.transparent,
+                                   foregroundColor: Colors.white,
+                                   elevation: 0,
+                                   shape: RoundedRectangleBorder(
+                                     borderRadius: BorderRadius.circular(14),
+                                   ),
+                                   textStyle: GoogleFonts.tiroBangla(
+                                     fontSize: 16,
+                                     fontWeight: FontWeight.w600,
+                                   ),
                                  ),
                                ),
                              ),
                            ),
-                           const SizedBox(height: 20),
+                           const SizedBox(height: 16),
                            
+                           // Share Button
                            SizedBox(
                              width: double.infinity,
                              child: OutlinedButton.icon(
                                onPressed: onShare,
-                               icon: const Icon(Icons.share_rounded, size: 18),
-                               label: const Text('শেয়ার করুন'),
+                               icon: Icon(Icons.share_rounded, size: 18, color: AppTheme.primaryColor),
+                               label: Text('শেয়ার করুন', style: TextStyle(color: AppTheme.primaryDark)),
                                style: OutlinedButton.styleFrom(
                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                 foregroundColor: Colors.black87,
-                                 side: BorderSide(color: Colors.grey.shade300),
+                                 foregroundColor: AppTheme.primaryColor,
+                                 side: BorderSide(color: AppTheme.primaryColor.withAlpha((0.5 * 255).round()), width: 1.5),
                                  shape: RoundedRectangleBorder(
-                                   borderRadius: BorderRadius.circular(12),
+                                   borderRadius: BorderRadius.circular(14),
                                  ),
-                                 textStyle: GoogleFonts.hindSiliguri(
+                                 textStyle: GoogleFonts.tiroBangla(
                                    fontSize: 16,
                                    fontWeight: FontWeight.w600,
                                  ),

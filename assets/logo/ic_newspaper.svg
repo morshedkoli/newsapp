@@ -1,14 +1,12 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Clean Background (Optional for icon usage context, usually transparent) -->
-  
   <!-- Main Newspaper Shape -->
-  <rect x="96" y="64" width="320" height="384" rx="24" fill="white" stroke="#4F46E5" stroke-width="32"/>
+  <rect x="96" y="64" width="320" height="384" rx="24" fill="white" stroke="#673AB7" stroke-width="32"/>
   
-  <!-- Folded Corner Effect (Subtle Geometry) -->
-  <path d="M416 64H320V160L416 64Z" fill="#4F46E5"/>
+  <!-- Folded Corner Effect -->
+  <path d="M416 64H320V160L416 64Z" fill="#673AB7"/>
   
-  <!-- Headline Bar (Primary Brand Color) -->
-  <rect x="144" y="144" width="160" height="32" rx="8" fill="#4F46E5"/>
+  <!-- Headline Bar (Deep Purple) -->
+  <rect x="144" y="144" width="160" height="32" rx="8" fill="#673AB7"/>
   
   <!-- Content Lines (Gray/Neutral) -->
   <rect x="144" y="208" width="224" height="24" rx="4" fill="#9CA3AF"/>
@@ -16,6 +14,6 @@
   <rect x="144" y="304" width="224" height="24" rx="4" fill="#9CA3AF"/>
   <rect x="144" y="352" width="160" height="24" rx="4" fill="#9CA3AF"/>
 
-  <!-- Accent Detail (Byte/Digital feel) -->
-  <circle cx="368" cy="384" r="24" fill="#4F46E5"/>
+  <!-- Accent Detail -->
+  <circle cx="368" cy="384" r="24" fill="#673AB7"/>
 </svg>

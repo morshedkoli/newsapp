@@ -4,19 +4,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
 import '../utils/app_router.dart';
+import '../utils/platform_utils.dart';
 
 final fcmServiceProvider = Provider<FcmService>((ref) {
   return FcmService();
 });
 
 class FcmService {
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  // Accessing instance might throw if not initialized, so we use a getter or late final with check,
+  // but safest is to just check before use.
+  FirebaseMessaging? get _messaging => 
+      PlatformUtils.supportsFirebase ? FirebaseMessaging.instance : null;
 
   Future<void> initialize() async {
+    if (!PlatformUtils.supportsFirebase) return;
+    
+    final messaging = _messaging;
+    if (messaging == null) return;
+
     // 0. Background handler is now in main.dart
 
     // 1. Request Permission
-    await _messaging.requestPermission(
+    await messaging.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
@@ -27,12 +36,16 @@ class FcmService {
     );
 
     // 1.1 Subscribe to Topics (Multiple to be safe)
-    // We do this REGARDLESS of current permission status to ensure registration
-    // The OS will block display if permission is denied, but subscription should happen.
-    await _messaging.subscribeToTopic('news');
-    await _messaging.subscribeToTopic('all'); 
-    await _messaging.subscribeToTopic('general');
-    debugPrint('Subscribed to topics: news, all, general');
+    if (!kIsWeb) {
+      try {
+        await messaging.subscribeToTopic('news');
+        await messaging.subscribeToTopic('all');
+        await messaging.subscribeToTopic('general');
+        debugPrint('Subscribed to topics: news, all, general');
+      } catch (e) {
+        debugPrint('Failed to subscribe to topics: $e');
+      }
+    }
 
     // 2. Setup Foreground Handler
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -46,7 +59,7 @@ class FcmService {
     });
 
     // 3. Setup Initial Message Handler (App opened from terminated state)
-    RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+    RemoteMessage? initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null) {
       _handleMessage(initialMessage);
     }

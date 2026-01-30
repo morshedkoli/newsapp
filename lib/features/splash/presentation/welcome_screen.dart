@@ -22,18 +22,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     {
       'title': 'স্বাগতম ${AppConstants.appName}-তে',
       'desc': 'সংক্ষিপ্ত ও গুরুত্বপূর্ণ খবর এক নজরে।',
-      'icon': 'assets/logo/full_logo.svg', // App Logo SVG
+      'icon': 'assets/icon/newsbyte_logo.png', // Red App Icon
       'type': 'logo',
     },
     {
       'title': 'এক নজরে খবর',
-      'desc': 'সংক্ষিপ্ত খবর পড়ুন দ্রুত। সম্পূর্ণ খবরের লিংক নিচে পাবেন।',
+      'desc': 'সংক্ষিপ্ত খবর পড়ুন দ্রুত। সম্পূর্ণ খবরের লিংক নিচে পাবেন।',
       'icon': 'read',
       'type': 'icon',
     },
     {
       'title': 'সহজ নেভিগেশন',
-      'desc': 'উপরে বা নিচে সোয়াইপ করে পরবর্তী বা আগের সংবাদ দেখুন।',
+      'desc': 'উপরে বা নিচে সোয়াইপ করে পরবর্তী বা আগের সংবাদ দেখুন।',
       'icon': 'swipe',
       'type': 'icon',
     },
@@ -45,7 +45,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     },
     {
       'title': 'সংরক্ষণ করুন',
-      'desc': 'সংবাদ সংরক্ষণ করুন এবং ইন্টারনেট ছাড়াও পরে পড়ুন।',
+      'desc': 'সংবাদ সংরক্ষণ করুন এবং ইন্টারনেট ছাড়াও পরে পড়ুন।',
       'icon': 'save',
       'type': 'icon',
     },
@@ -87,119 +87,150 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Skip Button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextButton(
-                  onPressed: _onSkip,
-                  child: Text(
-                    'এড়িয়ে যান',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 16,
-                      fontFamily: 'HindSiliguri', 
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              AppTheme.primaryLight.withAlpha((0.3 * 255).round()),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Skip Button
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextButton(
+                    onPressed: _onSkip,
+                    child: Text(
+                      'এড়িয়ে যান',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontFamily: 'TiroBangla', 
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            // Page View
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _tutorialData.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final data = _tutorialData[index];
-                  return _buildPage(data);
-                },
-              ),
-            ),
-
-            // Indicators
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _tutorialData.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 8,
-                  width: _currentPage == index ? 24 : 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? AppTheme.primaryColor
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Action Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    // Check if current page is Notification page (index 3 now)
-                    // Data: [0:Logo, 1:Read, 2:Swipe, 3:Notification, 4:Save]
-                    // If moving FROM Notification page to Save page
-                    
-                    if (_currentPage == 3) {
-                       await _requestNotificationPermission();
-                       // Then continue
-                       _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    } else if (_currentPage == _tutorialData.length - 1) {
-                      _onFinish();
-                    } else {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    }
+              // Page View
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: _tutorialData.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPage = index;
+                    });
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    _currentPage == 3 
-                        ? 'অনুমতি দিন' // "Allow" or "Continue" specific for notification
-                        : (_currentPage == _tutorialData.length - 1
-                          ? 'শুরু করুন'
-                          : 'পরবর্তী'),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  itemBuilder: (context, index) {
+                    final data = _tutorialData[index];
+                    return _buildPage(data);
+                  },
+                ),
+              ),
+
+              // Indicators
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _tutorialData.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: _currentPage == index ? 24 : 8,
+                    decoration: BoxDecoration(
+                      gradient: _currentPage == index
+                          ? LinearGradient(
+                              colors: [AppTheme.primaryColor, AppTheme.accentColor],
+                            )
+                          : null,
+                      color: _currentPage == index ? null : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+
+              const SizedBox(height: 32),
+
+              // Action Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withAlpha((0.3 * 255).round()),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        // Check if current page is Notification page (index 3 now)
+                        // Data: [0:Logo, 1:Read, 2:Swipe, 3:Notification, 4:Save]
+                        // If moving FROM Notification page to Save page
+                        
+                        if (_currentPage == 3) {
+                           await _requestNotificationPermission();
+                           // Then continue
+                           _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        } else if (_currentPage == _tutorialData.length - 1) {
+                          _onFinish();
+                        } else {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        _currentPage == 3 
+                            ? 'অনুমতি দিন' // "Allow" or "Continue" specific for notification
+                            : (_currentPage == _tutorialData.length - 1
+                              ? 'শুরু করুন'
+                              : 'পরবর্তী'),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -213,14 +244,74 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         children: [
           if (data['type'] == 'logo')
             data['icon']!.endsWith('.svg')
-                ? SvgPicture.asset(
-                    data['icon']!,
-                    height: 150, // Keep height mostly consistent, width auto
+                ? Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.primaryLight,
+                              AppTheme.primaryColor.withAlpha((0.2 * 255).round()),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withAlpha((0.2 * 255).round()),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: SvgPicture.asset(
+                          data['icon']!,
+                          height: 80,
+                          colorFilter: ColorFilter.mode(AppTheme.primaryColor, BlendMode.srcIn),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                        ).createShader(bounds),
+                        child: const Text(
+                          AppConstants.appName,
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, 
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
                   )
-                : Image.asset(
-                    data['icon']!,
-                    height: 150,
-                    width: 150,
+                : Column(
+                    children: [
+                       Image.asset(
+                          data['icon']!,
+                          height: 140,
+                          width: 140,
+                        ),
+                      const SizedBox(height: 24),
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                        ).createShader(bounds),
+                        child: const Text(
+                          AppConstants.appName,
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, 
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
                   )
           else
             _buildIcon(data['icon']!),
@@ -271,8 +362,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withValues(alpha: 0.1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryLight,
+            AppTheme.primaryColor.withAlpha((0.2 * 255).round()),
+          ],
+        ),
         shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withAlpha((0.2 * 255).round()),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Icon(
         iconData,

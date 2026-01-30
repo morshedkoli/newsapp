@@ -14,7 +14,13 @@ service cloud.firestore {
 
     match /news/{newsId} {
       allow read: if true;
-      allow write: if isAuthenticated(); // Restrict to admin in prod
+      allow create, update: if isAuthenticated()
+         && request.resource.data.keys().hasAll(['categoryId', 'categorySlug'])
+         && request.resource.data.categoryId is string
+         && request.resource.data.categorySlug is string
+         && request.resource.data.categoryId.size() > 0
+         && request.resource.data.categorySlug.size() > 0;
+      allow delete: if isAuthenticated();
       
       // Likes Subcollection
       // Path: /news/{newsId}/likes/{userId}
