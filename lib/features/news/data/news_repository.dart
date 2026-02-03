@@ -73,18 +73,27 @@ class NewsRepository {
           }
         }).whereType<NewsModel>().toList();
 
-        // Client-side filtering
+        // Apply same filtering logic as admin panel and Firestore queries
+        var filtered = newsList.where((news) {
+          // Check if published based on status field or legacy published_at
+          final hasPublishedAt = news.publishedAt != null;
+          final isPublished = news.status == 'published' || 
+                             (hasPublishedAt && (news.status == null || news.status!.isEmpty));
+          return isPublished;
+        }).toList();
+
+        // Client-side category filtering if needed
         if (category != null && category != 'all') {
-             return newsList.where((n) {
-                // Check slug match
-                if (n.categoryId == category || n.categorySlug == category) return true;
-                return false;
+             filtered = filtered.where((n) {
+               // Check slug match
+               if (n.categoryId == category || n.categorySlug == category) return true;
+               return false;
              }).toList(); 
         }
         
         // Sort by date desc
-        newsList.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
-        return newsList;
+        filtered.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+        return filtered;
       }
     } catch (e) {
       debugPrint('Error fetching REST news: $e');
@@ -101,24 +110,52 @@ class NewsRepository {
       return Stream.value([]);
     }
 
-    return firestore
-        .collection('news')
-        .orderBy('published_at', descending: true)
-        // Show ALL news on Home Page for ALL platforms (Mobile & Linux).
-        .limit(100) 
-        .snapshots()
-        .map((snapshot) {
+    // Use a controller to handle errors gracefully
+    return _fetchNewsWithFallback(firestore).asStream();
+  }
+
+  Future<List<NewsModel>> _fetchNewsWithFallback(FirebaseFirestore firestore) async {
+    try {
+      // Match admin panel approach: fetch all news ordered by created_at
+      // Then filter client-side to handle both new status field and legacy data
+      final snapshot = await firestore
+          .collection('news')
+          .orderBy('created_at', descending: true)
+          .limit(100)
+          .get();
+
       final newsList = <NewsModel>[];
       for (var doc in snapshot.docs) {
         try {
-          newsList.add(NewsModel.fromFirestore(doc));
+          final news = NewsModel.fromFirestore(doc);
+          final data = doc.data();
+          final hasPublishedAt = data['published_at'] != null;
+          final hasStatus = data['status'] != null && (data['status'] as String).isNotEmpty;
+          
+          // Match admin panel logic exactly:
+          // Show if status == 'published' OR (has published_at but no status - legacy data)
+          final isPublished = news.status == 'published' || 
+                              (hasPublishedAt && !hasStatus);
+          
+          if (isPublished) {
+            newsList.add(news);
+          }
         } catch (e) {
-          // Skip broken
+          debugPrint('Error parsing news doc: $e');
         }
       }
-      newsList.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+      
+      // Already ordered by created_at from Firestore, no need to sort
       return newsList;
-    });
+    } catch (e) {
+      debugPrint('News query failed: $e');
+      
+      // Fallback: try REST API for non-web platforms
+      if (!kIsWeb) {
+        return _fetchNewsRest();
+      }
+      return [];
+    }
   }
 
   // Get News by Category ID (Primary) or Slug (Legacy Fallback)
@@ -140,32 +177,33 @@ class NewsRepository {
     // If empty (or for legacy support), we might need to handle slug.
     // However, migration is done. We should use `categoryId`.
     
+    // Fetch by categoryId, then filter for published items client-side
     return firestore
         .collection('news')
-        .where('categoryId', isEqualTo: categoryIdentifier) // New ID based
+        .where('categoryId', isEqualTo: categoryIdentifier)
+        .orderBy('created_at', descending: true)
         .limit(100)
         .snapshots()
         .map((snapshot) {
-       // If empty, try legacy slug match (Fallback for non-migrated apps/data?)
-       // Note: snapshot.docs is empty list if no match.
-       // We can't really do "Fallback Query" in a single Stream easily without Rx.
-       // But wait! If migration script ran, ALL news have categoryId.
-       // So asking for categoryId should work.
-       // IF the user taps a category in ExplorePage, it passes the ID.
-       
-       // What if `categoryIdentifier` IS a slug (old deep link)?
-       // We should ideally separate `getNewsByCategoryId` vs `getNewsBySlug`.
-       // For now, let's assume we migrated everything and routing passes ID.
-       
        final newsList = <NewsModel>[];
       for (var doc in snapshot.docs) {
         try {
-          newsList.add(NewsModel.fromFirestore(doc));
+          final news = NewsModel.fromFirestore(doc);
+          final data = doc.data();
+          final hasPublishedAt = data['published_at'] != null;
+          final hasStatus = data['status'] != null && (data['status'] as String).isNotEmpty;
+          
+          // Match admin panel logic: published or legacy data
+          final isPublished = news.status == 'published' || (hasPublishedAt && !hasStatus);
+          
+          if (isPublished) {
+            newsList.add(news);
+          }
         } catch (e) {
-             // Handle error
+             // Skip invalid docs
         }
       }
-      newsList.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+      // Already sorted by created_at from Firestore
       return newsList;
     });
   }
@@ -211,20 +249,33 @@ class NewsRepository {
     if (query.isEmpty) return [];
 
     try {
+      // Fetch matching titles, then filter for published items client-side
       final snapshot = await firestore
           .collection('news')
           .where('title', isGreaterThanOrEqualTo: query)
           .where('title', isLessThan: '$query\uf8ff')
-          .limit(10)
+          .limit(20)
           .get();
 
-      return snapshot.docs.map((doc) {
+      final results = <NewsModel>[];
+      for (var doc in snapshot.docs) {
         try {
-          return NewsModel.fromFirestore(doc);
+          final news = NewsModel.fromFirestore(doc);
+          final data = doc.data();
+          final hasPublishedAt = data['published_at'] != null;
+          final hasStatus = data['status'] != null && (data['status'] as String).isNotEmpty;
+          
+          // Match admin panel logic: published or legacy data
+          final isPublished = news.status == 'published' || (hasPublishedAt && !hasStatus);
+          
+          if (isPublished) {
+            results.add(news);
+          }
         } catch (e) {
-          return null;
+          // Skip invalid docs
         }
-      }).whereType<NewsModel>().toList();
+      }
+      return results.take(10).toList();
     } catch (e) {
       return [];
     }
@@ -273,7 +324,8 @@ class NewsRepository {
       try {
         final snapshot = await firestore
             .collection('news')
-            .orderBy('published_at', descending: true) // Ensure field matches DB
+            .where('status', isEqualTo: 'published')
+            .orderBy('created_at', descending: true) // Match admin panel ordering
             .limit(100) 
             .get();
         

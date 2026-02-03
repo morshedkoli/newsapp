@@ -22,6 +22,7 @@ class NewsModel {
   final String categoryName; // Display Name
   
   final String url;
+  final String status;
 
   NewsModel({
     required this.id,
@@ -35,6 +36,7 @@ class NewsModel {
     @Deprecated('Use categorySlug') this.category = 'general',
     @Deprecated('Use categoryName') this.categoryName = 'সাধারণ',
     this.url = '',
+    this.status = 'published',
   });
 
   factory NewsModel.fromFirestore(DocumentSnapshot doc) {
@@ -101,6 +103,7 @@ class NewsModel {
       category: catSlug,
       categoryName: data['category_name'] as String? ?? (catSlug == 'general' ? 'সাধারণ' : catSlug),
       url: (link != null && link.isNotEmpty) ? link : '',
+      status: data['status'] as String? ?? 'published',
     );
   }
 
@@ -179,18 +182,28 @@ class NewsModel {
       category: catSlug,
       categoryName: getString('category_name').isNotEmpty ? getString('category_name') : (catSlug == 'general' ? 'সাধারণ' : catSlug),
       url: link,
+      status: getString('status').isNotEmpty ? getString('status') : 'published',
     );
   }
 
   static DateTime _parseDateTime(Map<String, dynamic> data) {
-    if (data.containsKey('publishedAt')) {
-      final val = data['publishedAt'];
+    // Try created_at first (matches admin panel ordering)
+    if (data.containsKey("created_at")) {
+      final val = data["created_at"];
       if (val is Timestamp) return val.toDate();
       if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
     }
     
-    if (data.containsKey('published_at')) {
-      final val = data['published_at'];
+    // Fallback to publishedAt for legacy compatibility
+    if (data.containsKey("publishedAt")) {
+      final val = data["publishedAt"];
+      if (val is Timestamp) return val.toDate();
+      if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    }
+    
+    // Fallback to published_at
+    if (data.containsKey("published_at")) {
+      final val = data["published_at"];
       if (val is Timestamp) return val.toDate();
       if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,44 +19,61 @@ class NativeAdWidget extends ConsumerStatefulWidget {
 class _NativeAdWidgetState extends ConsumerState<NativeAdWidget> {
   NativeAd? _nativeAd;
   bool _isAdLoaded = false;
+  bool _hasError = false;
 
   void _loadAd(String unitId) {
-    if (_nativeAd != null) return;
+    if (_nativeAd != null || _hasError) return;
 
-    NativeAd(
-      adUnitId: unitId,
-      listener: NativeAdListener(
-        onAdLoaded: (ad) {
-          if (mounted) {
-            setState(() {
-              _nativeAd = ad as NativeAd;
-              _isAdLoaded = true;
-            });
-          }
-        },
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('Native ad failed to load: $error');
-          ad.dispose();
-        },
-      ),
-      request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(
-        templateType: TemplateType.medium,
-        mainBackgroundColor: Colors.white,
-        cornerRadius: 12.0,
-        callToActionTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.white,
-          backgroundColor: AppTheme.primaryColor,
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
+    try {
+      NativeAd(
+        adUnitId: unitId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            if (mounted) {
+              setState(() {
+                _nativeAd = ad as NativeAd;
+                _isAdLoaded = true;
+                _hasError = false;
+              });
+              debugPrint('✅ Native ad loaded successfully');
+            }
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('❌ Native ad failed to load: $error');
+            ad.dispose();
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+              });
+            }
+          },
         ),
-        primaryTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.black,
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
+        request: const AdRequest(),
+        nativeTemplateStyle: NativeTemplateStyle(
+          templateType: TemplateType.medium,
+          mainBackgroundColor: Colors.white,
+          cornerRadius: 12.0,
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppTheme.primaryColor,
+            style: NativeTemplateFontStyle.bold,
+            size: 16.0,
+          ),
+          primaryTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.black,
+            style: NativeTemplateFontStyle.bold,
+            size: 16.0,
+          ),
         ),
-      ),
-    ).load();
+      ).load();
+    } catch (e) {
+      debugPrint('❌ Exception loading native ad: $e');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
+    }
   }
 
   @override
@@ -86,7 +104,13 @@ class _NativeAdWidgetState extends ConsumerState<NativeAdWidget> {
           if (nativeConfig.customImageUrl.isEmpty) return const SizedBox.shrink();
           
           return GestureDetector(
-            onTap: () => ref.read(adManagerProvider).handleCustomAdClick(nativeConfig.customTargetUrl),
+            onTap: () {
+              try {
+                ref.read(adManagerProvider).handleCustomAdClick(nativeConfig.customTargetUrl);
+              } catch (e) {
+                debugPrint('❌ Error handling custom native ad click: $e');
+              }
+            },
             child: Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               elevation: 2,
@@ -102,7 +126,10 @@ class _NativeAdWidgetState extends ConsumerState<NativeAdWidget> {
                         child: CachedNetworkImage(
                           imageUrl: nativeConfig.customImageUrl,
                           fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                          errorWidget: (_, __, error) {
+                            debugPrint('❌ Failed to load custom native ad image: $error');
+                            return const SizedBox.shrink();
+                          },
                         ),
                       ),
                       Positioned(
@@ -132,15 +159,43 @@ class _NativeAdWidgetState extends ConsumerState<NativeAdWidget> {
         if (nativeConfig.provider == 'admob') {
           if (nativeConfig.unitId.isEmpty) return const SizedBox.shrink();
           
-          if (!_isAdLoaded) {
-            _loadAd(nativeConfig.unitId);
+          // Use test ad in debug mode
+          final adUnitId = nativeConfig.getAdUnitId(kDebugMode, AdsConfig.testNativeAdUnitId);
+          
+          if (!_isAdLoaded && !_hasError) {
+            _loadAd(adUnitId);
+          }
+
+          // Show error in debug mode
+          if (_hasError && kDebugMode) {
+            return Container(
+              height: 100,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              color: Colors.red.withOpacity(0.2),
+              alignment: Alignment.center,
+              child: const Text("Native Ad Failed to Load", style: TextStyle(fontSize: 10)),
+            );
           }
 
           if (_nativeAd != null && _isAdLoaded) {
              return Container(
                height: 320, // Typical height for medium template
                margin: const EdgeInsets.symmetric(vertical: 8),
-               child: AdWidget(ad: _nativeAd!),
+               child: Stack(
+                 children: [
+                   AdWidget(ad: _nativeAd!),
+                   if (kDebugMode)
+                     Positioned(
+                       top: 8,
+                       right: 8,
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                         color: Colors.green,
+                         child: const Text('TEST AD', style: TextStyle(color: Colors.white, fontSize: 8)),
+                       ),
+                     ),
+                 ],
+               ),
              );
           }
            return const SizedBox(height: 1); 
@@ -149,7 +204,10 @@ class _NativeAdWidgetState extends ConsumerState<NativeAdWidget> {
         return const SizedBox.shrink();
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, stack) {
+        debugPrint('❌ Native ad config error: $err');
+        return const SizedBox.shrink();
+      },
     );
   }
 }

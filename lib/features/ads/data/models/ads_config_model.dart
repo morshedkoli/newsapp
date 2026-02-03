@@ -28,12 +28,20 @@ class AdPositionConfig {
   }
 
   factory AdPositionConfig.fromMap(Map<String, dynamic> map) {
+    // Handle both camelCase (app) and snake_case (admin backend)
     return AdPositionConfig(
       enabled: map['enabled'] as bool? ?? false,
       provider: map['provider'] as String? ?? 'none',
-      unitId: map['unitId'] as String? ?? '',
-      customImageUrl: map['customImageUrl'] as String? ?? '',
-      customTargetUrl: map['customLinkUrl'] as String? ?? '', // Note key change
+      unitId: map['unitId'] as String? ?? 
+              map['unit_id'] as String? ?? 
+              '',
+      customImageUrl: map['customImageUrl'] as String? ?? 
+                      map['custom_image_url'] as String? ?? 
+                      '',
+      customTargetUrl: map['customTargetUrl'] as String? ?? 
+                       map['customLinkUrl'] as String? ?? 
+                       map['custom_link_url'] as String? ?? 
+                       '',
       frequency: map['frequency'] as int? ?? 5,
     );
   }
@@ -48,6 +56,14 @@ class AdPositionConfig {
       'frequency': frequency,
     };
   }
+  
+  /// Get ad unit ID with debug mode support
+  String getAdUnitId(bool isDebug, String testAdUnitId) {
+    if (isDebug && provider == 'admob') {
+      return testAdUnitId;
+    }
+    return unitId;
+  }
 }
 
 /// Main Ads Configuration
@@ -56,6 +72,11 @@ class AdsConfig {
   final AdPositionConfig banner;
   final AdPositionConfig native;
   final AdPositionConfig interstitial;
+  
+  // Test Ad Unit IDs (Google's official test IDs)
+  static const String testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
+  static const String testNativeAdUnitId = 'ca-app-pub-3940256099942544/2247696110';
+  static const String testInterstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
 
   AdsConfig({
     required this.globalEnabled,
@@ -81,7 +102,9 @@ class AdsConfig {
     if (map.isEmpty) return AdsConfig.defaultConfig();
 
     return AdsConfig(
-      globalEnabled: map['globalEnabled'] as bool? ?? false,
+      globalEnabled: map['globalEnabled'] as bool? ?? 
+                     map['global_enabled'] as bool? ?? 
+                     false,
       banner: AdPositionConfig.fromMap(map['banner'] as Map<String, dynamic>? ?? {}),
       native: AdPositionConfig.fromMap(map['native'] as Map<String, dynamic>? ?? {}),
       interstitial: AdPositionConfig.fromMap(map['interstitial'] as Map<String, dynamic>? ?? {}),

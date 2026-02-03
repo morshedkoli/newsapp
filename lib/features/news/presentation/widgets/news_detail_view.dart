@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/url_utils.dart'; // Import
 import '../../../../core/widgets/safe_network_image.dart'; // Import
+import '../../../ads/presentation/widgets/ad_banner_widget.dart';
 
 class NewsDetailView extends ConsumerWidget {
   final String newsId;
@@ -125,6 +126,10 @@ class NewsDetailView extends ConsumerWidget {
                            ),
                            const SizedBox(height: 32),
                            
+                            // Banner Ad
+                            const AdBannerWidget(),
+                            const SizedBox(height: 16),
+                            
                            // Read More Button with Gradient
                            SizedBox(
                              width: double.infinity,
